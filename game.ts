@@ -31,3 +31,20 @@ function canPlaceShip(grid: Grid, row: number, col: number, size: number, direct
   }
   return true;
 }
+
+// 3. Placer un bateau
+function placeShip(grid: Grid, row: number, col: number, size: number, direction: Direction): boolean {
+  const placementPossible = canPlaceShip(grid, row, col, size, direction);
+
+  if (placementPossible === false) {
+    console.warn("❌ Impossible de placer le bateau à la position :", row, col);
+    return false;
+  }
+
+  for (let i = 0; i < size; i++) {
+    const r = direction === 'vertical' ? row + i : row;
+    const c = direction === 'horizontal' ? col + i : col;
+    grid[r][c] = 'ship';
+  }
+  return true;
+}
