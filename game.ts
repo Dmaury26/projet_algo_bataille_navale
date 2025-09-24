@@ -80,3 +80,56 @@ const ships: Ship[] = [
   { name: 'Sous-marin', size: 3 },
   { name: 'Torpilleur', size: 2 },
 ];
+
+// 6. Placement des bateaux (manuel et automatique)
+function placeAllShipsManually(grid: Grid, ships: Ship[]) {
+  for (let ship of ships) {
+    let placed = false;
+
+    while (!placed) {
+      const input = prompt(
+        `⚓ Où placer le ${ship.name} (taille ${ship.size}) ?\n` +
+        'Format attendu : ligne,colonne,direction (ex: 2,4,horizontal)\n' +
+        '👉 Ou appuie sur Entrée pour un placement aléatoire'
+      );
+
+      if (!input || input.trim() === '') {
+        console.log('Placement automatique du ${ship.name}...');
+
+        let essais = 0;
+        while (!placed && essais < 100) {
+          const row = Math.floor(Math.random() * grid.length);
+          const col = Math.floor(Math.random() * grid[0].length);
+          const direction: Direction = Math.random() < 0.5 ? 'horizontal' : 'vertical';
+
+          placed = placeShip(grid, row, col, ship.size, direction);
+          essais++;
+        }
+
+        if (placed) {
+          console.log(`✅ ${ship.name} placé automatiquement.`);
+          printGrid(grid);
+        } else {
+          console.warn(`❌ Impossible de placer automatiquement le ${ship.name} après plusieurs essais.`);
+          return;
+        }
+
+        continue;
+      }
+
+      const [rowStr, colStr, dirStr] = input.split(',');
+      const row = parseInt(rowStr);
+      const col = parseInt(colStr);
+      const direction = dirStr === 'vertical' ? 'vertical' : 'horizontal';
+
+      placed = placeShip(grid, row, col, ship.size, direction);
+
+      if (!placed) {
+        console.warn('❌ Placement invalide, réessaie.');
+      } else {
+        console.log(`✅ ${ship.name} placé à (${row}, ${col}) en ${direction}`);
+        printGrid(grid);
+      }
+    }
+  }
+}
