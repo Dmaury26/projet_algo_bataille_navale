@@ -2,6 +2,11 @@ type Direction = 'horizontal' | 'vertical';
 type Cell = 'empty' | 'ship';
 type Grid = Cell[][];
 
+interface Ship {
+  name: string;
+  size: number;
+}
+
 // 1. Créer une grille vide
 function createGrid(rows: number = 10, cols: number = 10): Grid {
   const grid: Grid = [];
@@ -48,3 +53,30 @@ function placeShip(grid: Grid, row: number, col: number, size: number, direction
   }
   return true;
 }
+
+// 4. Afficher la grille
+function printGrid(grid: Grid): void {
+  console.log('\nGrille du joueur :');
+
+  for (let row of grid) {
+    let ligneAffichee = '';
+
+    for (let cell of row) {
+      if (cell === 'ship') {
+        ligneAffichee += '🚢 ';
+      } else {
+        ligneAffichee += '⬜ ';
+      }
+    }
+    console.log(ligneAffichee.trim()); //Supprimer les espaces blancs
+  }
+}
+
+// 5. Liste des bateaux standards
+const ships: Ship[] = [
+  { name: 'Porte-avions', size: 5 },
+  { name: 'Croiseur', size: 4 },
+  { name: 'Contre-torpilleur', size: 3 },
+  { name: 'Sous-marin', size: 3 },
+  { name: 'Torpilleur', size: 2 },
+];
