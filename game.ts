@@ -1,5 +1,5 @@
 type Direction = 'horizontal' | 'vertical';
-type Cell = 'empty' | 'ship';
+type Cell = 'empty' | 'ship' | 'hit' | 'miss';
 type Grid = Cell[][];
 
 interface Ship {
@@ -39,9 +39,7 @@ function canPlaceShip(grid: Grid, row: number, col: number, size: number, direct
 
 // 3. Placer un bateau
 function placeShip(grid: Grid, row: number, col: number, size: number, direction: Direction): boolean {
-  const placementPossible = canPlaceShip(grid, row, col, size, direction);
-
-  if (placementPossible === false) {
+  if (!canPlaceShip(grid, row, col, size, direction)) {
     console.warn("❌ Impossible de placer le bateau à la position :", row, col);
     return false;
   }
@@ -64,11 +62,15 @@ function printGrid(grid: Grid): void {
     for (let cell of row) {
       if (cell === 'ship') {
         ligneAffichee += '🚢 ';
+      } else if (cell === 'hit') {
+        ligneAffichee += '💥 ';
+      } else if (cell === 'miss') {
+        ligneAffichee += '🌊 ';
       } else {
         ligneAffichee += '⬜ ';
       }
     }
-    console.log(ligneAffichee.trim()); //Supprimer les espaces blancs
+    console.log(ligneAffichee.trim());
   }
 }
 
@@ -94,7 +96,7 @@ function placeAllShipsManually(grid: Grid, ships: Ship[]) {
       );
 
       if (!input || input.trim() === '') {
-        console.log('Placement automatique du ${ship.name}...');
+        console.log(`Placement automatique du ${ship.name}...`);
 
         let essais = 0;
         while (!placed && essais < 100) {
@@ -133,3 +135,99 @@ function placeAllShipsManually(grid: Grid, ships: Ship[]) {
     }
   }
 }
+
+// 7. Fonction de tir
+function fire(grid: Grid, row: number, col: number): void {
+  const cell = grid[row][col];
+
+  if (cell === 'hit' || cell === 'miss') {
+    console.log("🚫 Tu as déjà tiré ici !");
+    return;
+  }
+
+  if (cell === 'ship') {
+    grid[row][col] = 'hit';
+    console.log("🔥 Touché !");
+  } else {
+    grid[row][col] = 'miss';
+    console.log("🌊 À l'eau !");
+  }
+}
+
+// 8. Vérifier si tous les bateaux sont coulés
+function allShipsSunk(grid: Grid): boolean {
+  for (let row of grid) {
+    for (let cell of row) {
+      if (cell === 'ship') {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+// 9. Boucle de tir tant que tous les bateaux ne sont pas coulés et possibilité de stopper le jeu 
+function gridToString(grid: Grid): string {
+  let str = '';
+  for (let row of grid) {
+    for (let cell of row) {
+      if (cell === 'ship') str += '🚢 ';
+      else if (cell === 'hit') str += '💥 ';
+      else if (cell === 'miss') str += '🌊 ';
+      else str += '⬜ ';
+    }
+    str += '\n';
+  }
+  return str;
+}
+
+function startFiringLoop(grid: Grid): void {
+  printGrid(grid);  // Affiche la grille dans la console au départ
+
+  while (!allShipsSunk(grid)) {
+    const grilleTexte = gridToString(grid);
+    const input = prompt(
+      `Grille actuelle:\n${grilleTexte}\n🎯 Entrez une position à tirer (ligne,colonne), ex: 3,5\nOu tape 'stop' pour arrêter`
+    );
+
+    if (!input || input.trim() === '') {
+      console.log("⛔ Taper quelque chose !");
+      continue;
+    }
+
+    if (input === 'stop') {
+      console.log("🛑 Jeu arrêté par l'utilisateur.");
+      return;
+    }
+
+    const [rowStr, colStr] = input.split(',');
+    const row = parseInt(rowStr);
+    const col = parseInt(colStr);
+
+    if (
+      isNaN(row) || isNaN(col) ||
+      row < 0 || row >= grid.length ||
+      col < 0 || col >= grid[0].length
+    ) {
+      console.log("🚫 Coordonnées invalides. Réessaie.");
+      continue;
+    }
+
+    fire(grid, row, col);
+
+    printGrid(grid);  // Affiche la grille mise à jour dans la console
+  }
+
+  console.log("🏆 Tous les bateaux sont coulés ! Bravo !");
+}
+
+
+// 10. Fonction principale pour lancer le jeu
+function startGame() {
+  const grid = createGrid();
+  placeAllShipsManually(grid, ships);
+  startFiringLoop(grid);
+}
+
+// Lancer le jeu
+startGame();
