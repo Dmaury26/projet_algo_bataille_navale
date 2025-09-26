@@ -10,7 +10,6 @@ interface Ship {
 // 1. Créer une grille vide
 function createGrid(rows: number = 10, cols: number = 10): Grid {
   const grid: Grid = [];
-
   for (let i = 0; i < rows; i++) {
     const row: Cell[] = [];
     for (let j = 0; j < cols; j++) {
@@ -52,29 +51,13 @@ function placeShip(grid: Grid, row: number, col: number, size: number, direction
   return true;
 }
 
-// 4. Afficher la grille
+// 4. Afficher la grille dans la console (pour debug)
 function printGrid(grid: Grid): void {
   console.log('\nGrille du joueur :');
-
-  for (let row of grid) {
-    let ligneAffichee = '';
-
-    for (let cell of row) {
-      if (cell === 'ship') {
-        ligneAffichee += '🚢 ';
-      } else if (cell === 'hit') {
-        ligneAffichee += '💥 ';
-      } else if (cell === 'miss') {
-        ligneAffichee += '🌊 ';
-      } else {
-        ligneAffichee += '⬜ ';
-      }
-    }
-    console.log(ligneAffichee.trim());
-  }
+  console.log(gridToString(grid, false));
 }
 
-// 5. Liste des bateaux standards
+// 5. Liste des bateaux
 const ships: Ship[] = [
   { name: 'Porte-avions', size: 5 },
   { name: 'Croiseur', size: 4 },
@@ -83,7 +66,7 @@ const ships: Ship[] = [
   { name: 'Torpilleur', size: 2 },
 ];
 
-// 6. Placement des bateaux (manuel et automatique)
+// 6. Placement des bateaux (manuel ou auto)
 function placeAllShips(grid: Grid, ships: Ship[]) {
   for (let ship of ships) {
     let placed = false;
@@ -91,8 +74,8 @@ function placeAllShips(grid: Grid, ships: Ship[]) {
     while (!placed) {
       const input = prompt(
         `⚓ Où placer le ${ship.name} (taille ${ship.size}) ?\n` +
-        'Format attendu : ligne,colonne,direction (ex: 2,4,horizontal)\n' +
-        '👉 Ou appuie sur Entrée pour un placement aléatoire'
+        'Format : ligne,colonne,direction (ex: 2,4,horizontal)\n' +
+        'Ou appuie sur Entrée pour un placement aléatoire'
       );
 
       if (!input || input.trim() === '') {
@@ -110,9 +93,8 @@ function placeAllShips(grid: Grid, ships: Ship[]) {
 
         if (placed) {
           console.log(`✅ ${ship.name} placé automatiquement.`);
-          printGrid(grid);
         } else {
-          console.warn(`❌ Impossible de placer automatiquement le ${ship.name} après plusieurs essais.`);
+          console.warn(`❌ Impossible de placer automatiquement le ${ship.name}.`);
           return;
         }
 
@@ -130,7 +112,6 @@ function placeAllShips(grid: Grid, ships: Ship[]) {
         console.warn('❌ Placement invalide, réessaie.');
       } else {
         console.log(`✅ ${ship.name} placé à (${row}, ${col}) en ${direction}`);
-        printGrid(grid);
       }
     }
   }
@@ -166,28 +147,38 @@ function allShipsSunk(grid: Grid): boolean {
   return true;
 }
 
-// 9. Boucle de tir tant que tous les bateaux ne sont pas coulés et possibilité de stopper le jeu 
-function gridToString(grid: Grid): string {
+// 9. Convertir la grille en texte pour pouvoir l'afficher avec prompt()
+function gridToString(grid: Grid, hideShips: boolean = false): string {
   let str = '';
   for (let row of grid) {
     for (let cell of row) {
-      if (cell === 'ship') str += '🚢 ';
-      else if (cell === 'hit') str += '💥 ';
-      else if (cell === 'miss') str += '🌊 ';
-      else str += '⬜ ';
+      if (cell === 'ship') {
+        str += hideShips ? '⬜ ' : '🚢 ';
+      } else if (cell === 'hit') {
+        str += '💥 ';
+      } else if (cell === 'miss') {
+        str += '🌊 ';
+      } else {
+        str += '⬜ ';
+      }
     }
     str += '\n';
   }
   return str;
 }
 
+// 10. Boucle de tir avec option hide/show pour rendre visible ou non les bateaux
 function startFiringLoop(grid: Grid): void {
-  printGrid(grid);  // Affiche la grille dans la console au départ
+  let showShips = false;
 
   while (!allShipsSunk(grid)) {
-    const grilleTexte = gridToString(grid);
+    const grilleTexte = gridToString(grid, !showShips);
+
     const input = prompt(
-      `Grille actuelle:\n${grilleTexte}\n🎯 Entrez une position à tirer (ligne,colonne), ex: 3,5\nOu tape 'stop' pour arrêter`
+      `🎯 Grille actuelle :\n${grilleTexte}\n` +
+      `- Entrez une position (ligne,colonne)\n` +
+      `- Tapez "hide" pour afficher/cacher les bateaux\n` +
+      `- Tapez "stop" pour quitter`
     );
 
     if (!input || input.trim() === '') {
@@ -195,12 +186,20 @@ function startFiringLoop(grid: Grid): void {
       continue;
     }
 
-    if (input === 'stop') {
-      console.log("🛑 Jeu arrêté par l'utilisateur.");
+    const cleaned = input.trim().toLowerCase();
+
+    if (cleaned === 'stop') {
+      console.log("🛑 Jeu arrêté.");
       return;
     }
 
-    const [rowStr, colStr] = input.split(',');
+    if (cleaned === 'hide') {
+      showShips = !showShips;
+      console.log(`👁️ Affichage des bateaux : ${showShips ? 'ON' : 'OFF'}`);
+      continue;
+    }
+
+    const [rowStr, colStr] = cleaned.split(',');
     const row = parseInt(rowStr);
     const col = parseInt(colStr);
 
@@ -214,15 +213,12 @@ function startFiringLoop(grid: Grid): void {
     }
 
     fire(grid, row, col);
-
-    printGrid(grid);  // Affiche la grille mise à jour dans la console
   }
 
   console.log("🏆 Tous les bateaux sont coulés ! Bravo !");
 }
 
-
-// 10. Fonction principale pour lancer le jeu
+// 11. Fonction principale pour lancer le jeu
 function startGame() {
   const grid = createGrid();
   placeAllShips(grid, ships);
