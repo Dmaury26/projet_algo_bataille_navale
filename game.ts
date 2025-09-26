@@ -22,14 +22,10 @@ function createGrid(rows: number = 10, cols: number = 10): Grid {
 
 // 2. Vérifier si le bateau peut être placé
 function canPlaceShip(grid: Grid, row: number, col: number, size: number, direction: Direction): boolean {
-  const rows = grid.length;
-  const cols = grid[0].length;
-
   for (let i = 0; i < size; i++) {
     const r = direction === 'vertical' ? row + i : row;
     const c = direction === 'horizontal' ? col + i : col;
-
-    if (r >= rows || c >= cols || grid[r][c] !== 'empty') {
+    if (r >= grid.length || c >= grid[0].length || grid[r][c] !== 'empty') {
       return false;
     }
   }
@@ -51,7 +47,7 @@ function placeShip(grid: Grid, row: number, col: number, size: number, direction
   return true;
 }
 
-// 4. Afficher la grille dans la console (pour debug)
+// 4. Afficher la grille dans la console (debug)
 function printGrid(grid: Grid): void {
   console.log('\nGrille du joueur :');
   console.log(gridToString(grid, false));
@@ -66,7 +62,7 @@ const ships: Ship[] = [
   { name: 'Torpilleur', size: 2 },
 ];
 
-// 6. Placement des bateaux (manuel ou auto)
+// 6. Placement des bateaux
 function placeAllShips(grid: Grid, ships: Ship[]) {
   for (let ship of ships) {
     let placed = false;
@@ -80,24 +76,19 @@ function placeAllShips(grid: Grid, ships: Ship[]) {
 
       if (!input || input.trim() === '') {
         console.log(`Placement automatique du ${ship.name}...`);
-
         let essais = 0;
         while (!placed && essais < 100) {
           const row = Math.floor(Math.random() * grid.length);
           const col = Math.floor(Math.random() * grid[0].length);
           const direction: Direction = Math.random() < 0.5 ? 'horizontal' : 'vertical';
-
           placed = placeShip(grid, row, col, ship.size, direction);
           essais++;
         }
-
-        if (placed) {
-          console.log(`✅ ${ship.name} placé automatiquement.`);
-        } else {
+        if (placed) console.log(`✅ ${ship.name} placé automatiquement.`);
+        else {
           console.warn(`❌ Impossible de placer automatiquement le ${ship.name}.`);
           return;
         }
-
         continue;
       }
 
@@ -139,19 +130,27 @@ function fire(grid: Grid, row: number, col: number): void {
 function allShipsSunk(grid: Grid): boolean {
   for (let row of grid) {
     for (let cell of row) {
-      if (cell === 'ship') {
-        return false;
-      }
+      if (cell === 'ship') return false;
     }
   }
   return true;
 }
 
-// 9. Convertir la grille en texte pour pouvoir l'afficher avec prompt()
+// 9. Convertir la grille en texte avec index des lignes et colonnes
 function gridToString(grid: Grid, hideShips: boolean = false): string {
-  let str = '';
-  for (let row of grid) {
-    for (let cell of row) {
+  let str = '    ';
+
+  for (let col = 0; col < grid[0].length; col++) {
+    if (col < 10) str += '  ' + col + '  ';
+    else str += col + ' ';
+  }
+  str += '\n';
+
+  for (let row = 0; row < grid.length; row++) {
+    if (row < 10) str += ' ' + row + '  ';
+    else str += row + '  ';
+
+    for (let cell of grid[row]) {
       if (cell === 'ship') {
         str += hideShips ? '⬜ ' : '🚢 ';
       } else if (cell === 'hit') {
@@ -167,7 +166,7 @@ function gridToString(grid: Grid, hideShips: boolean = false): string {
   return str;
 }
 
-// 10. Boucle de tir avec option hide/show pour rendre visible ou non les bateaux
+// 10. Boucle de tir
 function startFiringLoop(grid: Grid): void {
   let showShips = false;
 
@@ -211,19 +210,17 @@ function startFiringLoop(grid: Grid): void {
       console.log("🚫 Coordonnées invalides. Réessaie.");
       continue;
     }
-
     fire(grid, row, col);
   }
-
   console.log("🏆 Tous les bateaux sont coulés ! Bravo !");
 }
 
-// 11. Fonction principale pour lancer le jeu
+// 11. Démarrer le jeu
 function startGame() {
   const grid = createGrid();
   placeAllShips(grid, ships);
   startFiringLoop(grid);
 }
 
-// Lancer le jeu
+//Appel de la fonction de lancement
 startGame();
