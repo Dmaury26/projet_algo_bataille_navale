@@ -84,7 +84,7 @@ const ships: Ship[] = [
 ];
 
 // 6. Placement des bateaux (manuel et automatique)
-function placeAllShipsManually(grid: Grid, ships: Ship[]) {
+function placeAllShips(grid: Grid, ships: Ship[]) {
   for (let ship of ships) {
     let placed = false;
 
@@ -225,7 +225,7 @@ function startFiringLoop(grid: Grid): void {
 // 10. Fonction principale pour lancer le jeu
 function startGame() {
   const grid = createGrid();
-  placeAllShipsManually(grid, ships);
+  placeAllShips(grid, ships);
   startFiringLoop(grid);
 }
 
